@@ -13,10 +13,30 @@ const HOP_BY_HOP_HEADERS = new Set([
 ])
 
 const buildTargetUrl = (req) => {
-  // req.url includes `/api/...` + querystring.
-  const raw = String(req.url || '')
-  const forward = raw.startsWith('/api') ? raw.slice('/api'.length) : raw
-  return `${BACKEND_ORIGIN}${forward || '/'}`
+  const rawPath = req?.query?.path
+  const joinedPath = Array.isArray(rawPath)
+    ? rawPath.join('/')
+    : String(rawPath || '').replace(/^\/+/, '')
+
+  let pathname = joinedPath ? `/${joinedPath}` : ''
+
+  if (!pathname) {
+    const rawUrl = String(req.url || '')
+    const noQuery = rawUrl.split('?')[0]
+    pathname = noQuery.startsWith('/api') ? noQuery.slice('/api'.length) : noQuery
+  }
+
+  const query = Object.entries(req.query || {})
+    .filter(([key]) => key !== 'path')
+    .flatMap(([key, value]) => {
+      if (Array.isArray(value)) return value.map((v) => [key, v])
+      return [[key, value]]
+    })
+    .map(([key, value]) => `${encodeURIComponent(String(key))}=${encodeURIComponent(String(value ?? ''))}`)
+    .join('&')
+
+  const targetPath = pathname || '/'
+  return `${BACKEND_ORIGIN}${targetPath}${query ? `?${query}` : ''}`
 }
 
 const buildForwardHeaders = (req) => {
@@ -74,4 +94,3 @@ export default async function handler(req, res) {
   const buf = Buffer.from(await upstream.arrayBuffer())
   res.end(buf)
 }
-
