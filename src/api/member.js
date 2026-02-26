@@ -15,7 +15,9 @@ export const sendEmailCode = (data) => http.post('/sso/email/sendCode', data)
 export const emailCodeLogin = (data) => http.post('/sso/email/login', data)
 export const emailRegister = (data) => http.post('/sso/register', data)
 export const emailSetPassword = (data) => http.post('/sso/email/setPassword', data)
-export const fetchProfile = () => http.get('/sso/profile')
+// Cloud backend currently returns business-code 401 for GET /sso/profile.
+// Use /sso/info to avoid false "logged out" redirects in UserCenter.
+export const fetchProfile = () => http.get('/sso/info')
 export const updateProfile = (data) => http.post('/sso/profile/update', data)
 export const changeProfilePassword = (data) => http.post('/sso/profile/password/change', data)
 export const fetchAvatarRules = () => http.get('/sso/profile/avatar/rules')

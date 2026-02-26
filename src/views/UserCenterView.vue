@@ -256,9 +256,10 @@ const loadAttentions = async () => {
 const loadProfile = async () => {
   const res = await fetchProfile()
   const data = res.data || {}
-  profileForm.email = data.email || ''
-  profileForm.username = data.username || ''
-  profileForm.avatar = data.avatar || ''
+  // fetchProfile() uses /sso/info on cloud; map fields defensively.
+  profileForm.email = data.email || data.username || ''
+  profileForm.username = data.nickname || data.username || data.email || ''
+  profileForm.avatar = localStorage.getItem('pc_avatar') || data.avatar || ''
   profileForm.gender = Number(data.gender || 0)
   if (avatarPreviewObjectUrl.value) {
     URL.revokeObjectURL(avatarPreviewObjectUrl.value)

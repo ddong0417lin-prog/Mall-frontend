@@ -39,7 +39,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { fetchAvatarRules, fetchProfile, uploadProfileAvatar } from '@/api/member'
+import { fetchAvatarRules, uploadProfileAvatar } from '@/api/member'
 
 const router = useRouter()
 const avatarInputRef = ref(null)
@@ -95,8 +95,7 @@ const loadRules = async () => {
 }
 
 const loadProfileInfo = async () => {
-  const res = await fetchProfile()
-  profileAvatar.value = res.data?.avatar || ''
+  profileAvatar.value = localStorage.getItem('pc_avatar') || ''
 }
 
 const loadImageMeta = (file) =>
@@ -147,13 +146,15 @@ const uploadAvatar = async () => {
   try {
     const res = await uploadProfileAvatar(avatarFile.value)
     const url = res.data?.avatarUrlWithVersion || res.data?.avatarUrl || ''
-    if (url) profileAvatar.value = url
+    if (url) {
+      profileAvatar.value = url
+      localStorage.setItem('pc_avatar', url)
+    }
     avatarFile.value = null
     if (avatarPreviewObjectUrl.value) {
       URL.revokeObjectURL(avatarPreviewObjectUrl.value)
       avatarPreviewObjectUrl.value = ''
     }
-    await loadProfileInfo()
     ElMessage.success('头像上传成功')
     await router.push('/user')
   } catch (e) {
