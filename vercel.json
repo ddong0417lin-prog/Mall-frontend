@@ -2,16 +2,8 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api/proxy?path=:path*"
+      "destination": "http://106.54.202.181:8085/:path*"
     }
-  ],
-  "functions": {
-    "api/proxy.js": {
-      "maxDuration": 10
-    },
-    "api/[...path].js": {
-      "maxDuration": 10
-    }
-  }
+  ]
 }
 
