@@ -9,7 +9,9 @@ const HOP_BY_HOP_HEADERS = new Set([
   'trailer',
   'transfer-encoding',
   'upgrade',
-  'host'
+  'host',
+  'content-length',
+  'content-encoding'
 ])
 
 const buildTargetUrl = (req) => {
