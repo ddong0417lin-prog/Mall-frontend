@@ -53,15 +53,33 @@ export default async function handler(req, res) {
   let body
   if (method !== 'GET' && method !== 'HEAD') {
     body = req.body
+    const contentType = String(headers['Content-Type'] || headers['content-type'] || '').toLowerCase()
     if (body && typeof body === 'object' && !Buffer.isBuffer(body)) {
-      if (!headers['Content-Type'] && !headers['content-type']) {
-        headers['Content-Type'] = 'application/json'
+      if (contentType.includes('application/x-www-form-urlencoded')) {
+        body = new URLSearchParams(
+          Object.entries(body).map(([key, value]) => [key, value == null ? '' : String(value)])
+        ).toString()
+      } else if (contentType.includes('application/json')) {
+        body = JSON.stringify(body)
+      } else {
+        if (!headers['Content-Type'] && !headers['content-type']) {
+          headers['Content-Type'] = 'application/json'
+        }
+        body = JSON.stringify(body)
       }
-      body = Buffer.from(JSON.stringify(body))
     }
   }
 
-  const upstream = await fetch(url, { method, headers, body })
+  let upstream
+  try {
+    upstream = await fetch(url, { method, headers, body })
+  } catch (error) {
+    res.statusCode = 502
+    res.setHeader('Content-Type', 'application/json; charset=utf-8')
+    res.end(JSON.stringify({ code: 502, message: 'proxy upstream request failed', error: String(error?.message || error) }))
+    return
+  }
+
   res.statusCode = upstream.status
 
   upstream.headers.forEach((value, key) => {
@@ -74,4 +92,3 @@ export default async function handler(req, res) {
   const payload = Buffer.from(await upstream.arrayBuffer())
   res.end(payload)
 }
-
